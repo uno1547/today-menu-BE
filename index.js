@@ -1,7 +1,11 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
+
+// CORS 설정 - 모든 도메인에서 요청 허용
+app.use(cors());
 
 // 기본 라우트
 app.get('/', (req, res) => {
