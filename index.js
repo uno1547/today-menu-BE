@@ -33,6 +33,21 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+app.get('/api/create-table', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS test_table (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL
+      )
+    `);
+    res.json({ status: 'ok', message: 'Table created or already exists' });
+  } catch (err) {
+    console.error('Error creating table:', err);
+    res.status(500).json({ status: 'error', message: 'Could not create table' });
+  }
+});
+
 // 서버 실행
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
