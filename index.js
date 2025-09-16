@@ -1,13 +1,98 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require("./db");
+const http = require('http');
+const { Server } = require("socket.io");
+require('dotenv').config();
 
 const app = express();
-require('dotenv').config();
-const PORT = process.env.PORT || 3000;
-
+// const server = http.createServer(app); 이게 뭔가 문제가 있음
+const server = app.listen(3000, () => {
+  console.log('Server is running on port 3000');
+});
 // CORS 설정 - 모든 도메인에서 요청 허용
 app.use(cors());
+app.use(express.json()); // JSON 바디 파싱 미들웨어
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", // 모든 도메인에서 접근 허용
+    methods: ["GET", "POST"]
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+
+
+// 전역변수로 임시 관리
+let sellQuantity = 5;
+let isSelling = false;
+
+// 클라가 '판매시작' 버튼 누르면 판매 시작
+/*
+app.post('/api/admin/start-breakfast', (req, res) => {
+  const cnt = req.body.quantity;
+  isSelling = true;
+  sellQuantity = cnt;
+  res.json({ status: 'ok', message: `Sale started for ${cnt} items.` });
+});
+*/
+
+io.on('connection', (socket) => {
+  console.log('a user connected:', socket.id);
+
+  // 클라이언트에게 주기적으로 재고 상태 전송
+  // const interval = setInterval(() => {
+  //   socket.emit('stock-update', { sellQuantity, isSelling });
+  // }, 1000);
+
+  // 클라이언트에게 재고 상태 전송
+  
+  socket.emit('sale-started', () => {
+    isSelling = true
+    socket.emit('stock-update', { sellQuantity, isSelling });
+  });
+  
+  // isSelling = true
+  socket.emit('stock-update', { sellQuantity, isSelling });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected:', socket.id);
+    // clearInterval(interval);
+  });
+});
+
+// 판매 시작
+app.post('/api/admin/start-breakfast', (req, res) => {
+  const cnt = req.body.quantity;
+  isSelling = true;
+  sellQuantity = cnt;
+  console.log('시작요청');
+  io.emit('sale-started', { sellQuantity, isSelling });
+  res.json({ status: 'ok', message: `Sale started for ${cnt} items.` });
+});
+
+// 판매 종료
+app.post('/api/admin/stop-breakfast', (req, res) => {
+  isSelling = false;
+  io.emit('sale-ended', { isSelling });
+  res.json({ status: 'ok', message: 'Sale ended.' });
+});
+
+// 결제하기
+app.post('/api/purchase', (req, res) => {
+  // if (!isSelling) {
+  //   return res.status(400).json({ status: 'error', message: 'Sale has not started yet.' });
+  // }
+  if (sellQuantity <= 0) {
+    return res.status(400).json({ status: 'error', message: 'Sold out.' });
+  }
+  sellQuantity -= 1;
+  io.emit('stock-update', { sellQuantity, isSelling });
+  return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
+});
+
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -18,7 +103,7 @@ app.get('/', (req, res) => {
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from API!' });
 });
-
+/*
 app.get('/api/health', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
@@ -47,6 +132,7 @@ app.get('/api/create-table', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Could not create table' });
   }
 });
+*/
 
 // 서버 실행
 app.listen(PORT, () => {
