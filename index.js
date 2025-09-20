@@ -4,25 +4,28 @@ const pool = require("./db");
 const http = require('http');
 const { Server } = require("socket.io");
 require('dotenv').config();
+const PORT = process.env.PORT || 3000;
 
 const app = express();
-const server = http.createServer(app); // 이게 뭔가 문제가 있음
-// const server = app.listen(3000, () => {
-//   console.log('위쪽 app.listen')
-//   console.log('Server is running on port 3000');
-// });
 // CORS 설정 - 모든 도메인에서 요청 허용
 app.use(cors());
 app.use(express.json()); // JSON 바디 파싱 미들웨어
 
+const server = http.createServer(app); // 이게 뭔가 문제가 있음
+
 const io = new Server(server, {
   cors: {
-    origin: "*", // 모든 도메인에서 접근 허용
+    origin: ["https://hyang-cafeteria.vercel.app"], // 모든 도메인에서 접근 허용
     methods: ["GET", "POST"]
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// 서버 실행
+server.listen(PORT, () => {
+  console.log('맨아래 app.listen')
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
+});
+
 
 
 
@@ -63,6 +66,7 @@ io.on('connection', (socket) => {
 
 // 최초 판매 상태 전송
 app.get('/api/admin/breakfast-status', (req, res) => {
+  console.log("클라이언트에게 API 요청옴!!!")
   res.json({ isSelling }); // 얘 굳이 필요없을수도 소켓이벤트로 하면 실시간 반영까지도 할수있으니깐
 });
 
@@ -146,8 +150,3 @@ app.get('/api/create-table', async (req, res) => {
 });
 */
 
-// 서버 실행
-app.listen(PORT, () => {
-  console.log('맨아래 app.listen')
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
-});
