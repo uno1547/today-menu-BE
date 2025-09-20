@@ -29,6 +29,7 @@ const PORT = process.env.PORT || 3000;
 let sellQuantity;
 let currentQuantity;
 let isSelling = false;
+let currentWaitCnt = 13;
 
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
@@ -46,7 +47,12 @@ io.on('connection', (socket) => {
   // });
   
   // isSelling = true
-  socket.emit('stock-update', { sellQuantity, currentQuantity, isSelling });
+  // 총수량 및 현재수량 전송
+  // 판매상태 전송
+  socket.emit('sale-status', { isSelling }); // 아마 admin페이지에서는 안받으면됌
+  socket.emit('stock-update', { sellQuantity, currentQuantity });
+  // 대기인원수 전송
+  socket.emit('waitCnt-update', { currentWaitCnt });
 
   socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
@@ -56,7 +62,7 @@ io.on('connection', (socket) => {
 
 // 최초 판매 상태 전송
 app.get('/api/admin/breakfast-status', (req, res) => {
-  res.json({ isSelling });
+  res.json({ isSelling }); // 얘 굳이 필요없을수도 소켓이벤트로 하면 실시간 반영까지도 할수있으니깐
 });
 
 // 판매 시작
@@ -66,7 +72,9 @@ app.post('/api/admin/start-breakfast', (req, res) => {
   sellQuantity = cnt;
   currentQuantity = sellQuantity;
   console.log('시작요청');
+  io.emit('sale-status', { sellQuantity, currentQuantity, isSelling })
   // io.emit('sale-started', { sellQuantity, isSelling });
+  // io.emit('stock-update', { sellQuantity, isSelling }); 이거 필요한가???
   res.json({ status: 'ok', message: `전체수량 ${sellQuantity} / 현재수량 ${currentQuantity} 판매시작` });
   console.log(`전체수량 ${sellQuantity} / 현재수량 ${currentQuantity} 판매시작`);
 });
@@ -76,6 +84,7 @@ app.post('/api/admin/stop-breakfast', (req, res) => {
   isSelling = false;
   sellQuantity = 0;
   currentQuantity = 0;
+  io.emit('sale-status', { isSelling });
   console.log('종료요청');
   // io.emit('sale-ended', { isSelling });
   res.json({ status: 'ok', message: 'Sale ended.' });
