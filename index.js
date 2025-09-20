@@ -26,18 +26,9 @@ const PORT = process.env.PORT || 3000;
 
 
 // 전역변수로 임시 관리
-let sellQuantity = 5;
+let sellQuantity;
+let currentQuantity;
 let isSelling = false;
-
-// 클라가 '판매시작' 버튼 누르면 판매 시작
-/*
-app.post('/api/admin/start-breakfast', (req, res) => {
-  const cnt = req.body.quantity;
-  isSelling = true;
-  sellQuantity = cnt;
-  res.json({ status: 'ok', message: `Sale started for ${cnt} items.` });
-});
-*/
 
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
@@ -63,20 +54,26 @@ io.on('connection', (socket) => {
   });
 });
 
+// 최초 판매 상태 전송
+app.get('/api/admin/breakfast-status', (req, res) => {
+  res.json({ isSelling });
+});
+
 // 판매 시작
 app.post('/api/admin/start-breakfast', (req, res) => {
   const cnt = req.body.quantity;
   isSelling = true;
   sellQuantity = cnt;
+  currentQuantity = sellQuantity;
   console.log('시작요청');
-  io.emit('sale-started', { sellQuantity, isSelling });
+  // io.emit('sale-started', { sellQuantity, isSelling });
   res.json({ status: 'ok', message: `Sale started for ${cnt} items.` });
 });
 
 // 판매 종료
 app.post('/api/admin/stop-breakfast', (req, res) => {
   isSelling = false;
-  io.emit('sale-ended', { isSelling });
+  // io.emit('sale-ended', { isSelling });
   res.json({ status: 'ok', message: 'Sale ended.' });
 });
 
