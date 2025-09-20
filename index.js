@@ -40,13 +40,13 @@ io.on('connection', (socket) => {
 
   // 클라이언트에게 재고 상태 전송
   
-  socket.emit('sale-started', () => {
-    isSelling = true
-    socket.emit('stock-update', { sellQuantity, isSelling });
-  });
+  // socket.emit('sale-started', () => {
+  //   isSelling = true
+  //   socket.emit('stock-update', { sellQuantity, isSelling });
+  // });
   
   // isSelling = true
-  socket.emit('stock-update', { sellQuantity, isSelling });
+  socket.emit('stock-update', { sellQuantity, currentQuantity, isSelling });
 
   socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
@@ -67,12 +67,16 @@ app.post('/api/admin/start-breakfast', (req, res) => {
   currentQuantity = sellQuantity;
   console.log('시작요청');
   // io.emit('sale-started', { sellQuantity, isSelling });
-  res.json({ status: 'ok', message: `Sale started for ${cnt} items.` });
+  res.json({ status: 'ok', message: `전체수량 ${sellQuantity} / 현재수량 ${currentQuantity} 판매시작` });
+  console.log(`전체수량 ${sellQuantity} / 현재수량 ${currentQuantity} 판매시작`);
 });
 
 // 판매 종료
 app.post('/api/admin/stop-breakfast', (req, res) => {
   isSelling = false;
+  sellQuantity = 0;
+  currentQuantity = 0;
+  console.log('종료요청');
   // io.emit('sale-ended', { isSelling });
   res.json({ status: 'ok', message: 'Sale ended.' });
 });
@@ -82,11 +86,12 @@ app.post('/api/purchase', (req, res) => {
   // if (!isSelling) {
   //   return res.status(400).json({ status: 'error', message: 'Sale has not started yet.' });
   // }
-  if (sellQuantity <= 0) {
+  if (currentQuantity <= 0 || !isSelling) {
     return res.status(400).json({ status: 'error', message: 'Sold out.' });
   }
-  sellQuantity -= 1;
-  io.emit('stock-update', { sellQuantity, isSelling });
+  currentQuantity -= 1;
+  console.log(`구매요청 / 현재수량 ${currentQuantity}`);
+  io.emit('stock-update', { currentQuantity });
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
 });
 
