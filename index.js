@@ -16,7 +16,7 @@ app.use(express.json()); // JSON 바디 파싱 미들웨어
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // 모든 도메인에서 접근 허용
+    origin: "*", // 모든 도메인에서 접근 허용
     methods: ["GET", "POST"]
   }
 });
