@@ -15,7 +15,7 @@ const server = http.createServer(app); // 이게 뭔가 문제가 있음
 
 const io = new Server(server, {
   cors: {
-    origin: ["https://hyang-cafeteria.vercel.app"], // 모든 도메인에서 접근 허용
+    origin: ["https://hyang-cafeteria.vercel.app", "http://localhost:5173"], // 모든 도메인에서 접근 허용
     methods: ["GET", "POST"]
   }
 });
