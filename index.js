@@ -8,6 +8,7 @@ require('dotenv').config();
 const app = express();
 // const server = http.createServer(app); 이게 뭔가 문제가 있음
 const server = app.listen(3000, () => {
+  console.log('위쪽 app.listen')
   console.log('Server is running on port 3000');
 });
 // CORS 설정 - 모든 도메인에서 요청 허용
@@ -147,5 +148,6 @@ app.get('/api/create-table', async (req, res) => {
 
 // 서버 실행
 app.listen(PORT, () => {
+  console.log('맨아래 app.listen')
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
