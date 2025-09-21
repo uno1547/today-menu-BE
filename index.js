@@ -109,6 +109,13 @@ app.post('/api/purchase', (req, res) => {
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
 });
 
+// python request로 받은 대기인원수
+app.post('/ping/count', (req, res) => {
+  const count = req.body.count;
+  console.log(`python에서 받은 대기인원 ${count}`)
+  res.sendStatus(200)
+});
+
 
 // 기본 라우트
 app.get('/', (req, res) => {
