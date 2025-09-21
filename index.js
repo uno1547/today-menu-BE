@@ -33,7 +33,7 @@ server.listen(PORT, () => {
 let sellQuantity;
 let currentQuantity;
 let isSelling = false;
-let currentWaitCnt = 13;
+let currentWaitCnt = 0;
 
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
@@ -107,6 +107,15 @@ app.post('/api/purchase', (req, res) => {
   console.log(`구매요청 / 현재수량 ${currentQuantity}`);
   io.emit('stock-update', { currentQuantity });
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
+});
+
+// python request로 받은 대기인원수
+app.post('/ping/count', (req, res) => {
+  const count = req.body.count;
+  console.log(`python에서 받은 대기인원 ${count}`)
+  currentWaitCnt = count;
+  io.emit('waitCnt-update', { currentWaitCnt });
+  res.sendStatus(200)
 });
 
 
