@@ -128,10 +128,13 @@ app.get('/', (req, res) => {
 app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from API!' });
 });
-/*
+
 app.get('/api/health', async (req, res) => {
+  console.log('health check 요청옴!!!');
   try {
     const result = await pool.query('SELECT NOW()');
+    console.log('시간');
+    console.log(result.rows[0].now);
     res.json({
       status: 'ok',
       dbTime: result.rows[0].now,
@@ -142,6 +145,7 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Database not reachable' });
   }
 });
+/*
 
 app.get('/api/create-table', async (req, res) => {
   try {
