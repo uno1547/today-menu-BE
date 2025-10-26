@@ -1,8 +1,10 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require("./db");
+const db = require("./db");
 const http = require('http');
 const { Server } = require("socket.io");
+const { collection } = require('firebase/firestore');
+const { getDocs } = require('firebase/firestore');
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 
@@ -62,6 +64,33 @@ io.on('connection', (socket) => {
     console.log('user disconnected:', socket.id);
     // clearInterval(interval);
   });
+});
+
+
+
+
+
+
+
+
+
+
+
+// firestore에서 데이터 가져오기
+app.get('/api/get-data', async (req, res) => {
+  // db에서 데이터 가져오기
+  const items = [];
+  try {
+    const data = await getDocs(collection(db, 'menus'));
+    data.forEach(element => {
+      items.push(element.data());
+    });
+    console.log(items);
+    res.json({ status: 'ok', data: items });
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch data' });
+  }
 });
 
 // 최초 판매 상태 전송

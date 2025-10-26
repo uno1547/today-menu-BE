@@ -1,3 +1,4 @@
+/*
 const { Pool } = require("pg");
 require('dotenv').config();
 
@@ -8,3 +9,17 @@ const pool = new Pool({
 
 
 module.exports = pool;
+*/
+
+
+// import { initializeApp } from "firebase/app";
+const { initializeApp } = require("firebase/app");
+const { getFirestore } = require("firebase/firestore");
+// import { getAnalytics } from "firebase/analytics";
+// const config = require('./config');
+// import config from "./config";
+const config = require('./config');
+
+const app = initializeApp(config.firebaseConfig);
+const db = getFirestore(app);
+module.exports = db;
