@@ -12,7 +12,6 @@ const app = express();
 // CORS 설정 - 모든 도메인에서 요청 허용
 app.use(cors());
 app.use(express.json()); // JSON 바디 파싱 미들웨어
-
 const server = http.createServer(app); // 이게 뭔가 문제가 있음
 
 const io = new Server(server, {
@@ -79,6 +78,7 @@ io.on('connection', (socket) => {
 // firestore에서 데이터 가져오기
 app.get('/api/get-data', async (req, res) => {
   // db에서 데이터 가져오기
+  console.log('데이터요청');
   const items = [];
   try {
     const data = await getDocs(collection(db, 'menus'));
@@ -92,6 +92,7 @@ app.get('/api/get-data', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to fetch data' });
   }
 });
+
 
 // 최초 판매 상태 전송
 app.get('/api/admin/breakfast-status', (req, res) => {
@@ -129,6 +130,7 @@ app.post('/api/purchase', (req, res) => {
   // if (!isSelling) {
   //   return res.status(400).json({ status: 'error', message: 'Sale has not started yet.' });
   // }
+  console.log('결제요청');
   if (currentQuantity <= 0 || !isSelling) {
     return res.status(400).json({ status: 'error', message: 'Sold out.' });
   }
