@@ -80,6 +80,7 @@ app.get('/api/get-data', async (req, res) => {
   // db에서 데이터 가져오기
   console.log('데이터요청');
   const items = [];
+  console.log(db);
   try {
     const data = await getDocs(collection(db, 'menus'));
     data.forEach(element => {
