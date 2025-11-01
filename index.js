@@ -263,11 +263,15 @@ app.post('/api/purchase', (req, res) => {
   // }
   console.log('결제요청');
   if (currentQuantity <= 0 || !isSelling) {
+    // isSelling = false;
+    // io.emit('sale-status', { isSelling });
     return res.status(400).json({ status: 'error', message: 'Sold out.' });
   }
   currentQuantity -= 1;
+  if(currentQuantity <= 0) isSelling = false;
   console.log(`구매요청 / 현재수량 ${currentQuantity}`);
   io.emit('stock-update', { currentQuantity });
+  // io.emit('sale-status', { isSelling });
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
 });
 
