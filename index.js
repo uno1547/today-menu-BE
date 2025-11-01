@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 // CORS 설정 - 모든 도메인에서 요청 허용
 app.use(cors());
-app.use(express.json()); // JSON 바디 파싱 미들웨어
+app.use(express.json({ limit: '10mb' })); // JSON 바디 파싱 미들웨어
 const server = http.createServer(app); // 이게 뭔가 문제가 있음
 
 const io = new Server(server, {
@@ -263,20 +263,26 @@ app.post('/api/purchase', (req, res) => {
   // }
   console.log('결제요청');
   if (currentQuantity <= 0 || !isSelling) {
+    // isSelling = false;
+    // io.emit('sale-status', { isSelling });
     return res.status(400).json({ status: 'error', message: 'Sold out.' });
   }
   currentQuantity -= 1;
+  if(currentQuantity <= 0) isSelling = false;
   console.log(`구매요청 / 현재수량 ${currentQuantity}`);
   io.emit('stock-update', { currentQuantity });
+  // io.emit('sale-status', { isSelling });
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
 });
 
 // python request로 받은 대기인원수
 app.post('/ping/count', (req, res) => {
   const count = req.body.count;
+  const imageB64 = req.body.image
   console.log(`python에서 받은 대기인원 ${count}`)
   currentWaitCnt = count;
-  io.emit('waitCnt-update', { currentWaitCnt });
+  console.log(imageB64 ? '이미지 데이터 있음' : '이미지 데이터 없음');
+  io.emit('waitCnt-update', { currentWaitCnt, imageB64});
   res.sendStatus(200)
 });
 
