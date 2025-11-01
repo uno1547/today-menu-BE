@@ -3,8 +3,8 @@ const cors = require('cors');
 const db = require("./db");
 const http = require('http');
 const { Server } = require("socket.io");
-const { collection } = require('firebase/firestore');
-const { getDocs } = require('firebase/firestore');
+const { collection, doc, query, where } = require('firebase/firestore');
+const { getDocs, getDoc } = require('firebase/firestore');
 require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 
@@ -73,14 +73,14 @@ io.on('connection', (socket) => {
 
 
 
-
+// 식단관련 API
 
 // firestore에서 데이터 가져오기
 app.get('/api/get-data', async (req, res) => {
   // db에서 데이터 가져오기
   console.log('데이터요청');
   const items = [];
-  console.log(db);
+  // console.log(db);
   try {
     const data = await getDocs(collection(db, 'menus'));
     data.forEach(element => {
@@ -93,6 +93,136 @@ app.get('/api/get-data', async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Failed to fetch data' });
   }
 });
+
+// 날짜별 식단 firestore에서 데이터 가져오기
+app.get('/api/get-menu-by-date', async (req, res) => {
+  console.log('오늘 메뉴 요청!!');
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ status: 'error', message: 'Date is required' });
+    }  
+
+    const docRef = doc(db, 'weekly-menus', date);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return res.status(404).json({ status: 'error', message: 'Menu not found for the given date' });
+    }
+
+    const menuData = docSnap.data();
+    return res.json({ status: 'ok', data: menuData });
+
+  } catch (error) {
+    console.error('Error fetching menu by date:', error);
+    return res.status(500).json({ status: 'error', message: 'Failed to fetch menu' });
+  }
+
+
+  // const items = [];
+
+
+  // try {
+  //   const data = await getDocs(collection(db, 'menus'));
+  //   data.forEach(element => {
+  //     const menuDate = element.data().date;
+  //     if (menuDate === date) {
+  //       items.push(element.data());
+  //     }
+  //   });
+  //   res.json({ status: 'ok', data: items });
+  // } catch (error) {
+  //   console.error('Error fetching data:', error);
+  //   res.status(500).json({ status: 'error', message: 'Failed to fetch data' });
+  // }
+});
+
+
+
+
+// 식당 관련 API
+const buildingMap = {
+  h2 : "향2",
+  h3 : "향3",
+  "student-hall" : "학생회관"
+}
+
+app.get('/api/get-stores', async (req, res) => { 
+  try {
+    const { building } = req.query;
+    if (!building) {
+      return res.status(400).json({ status: "error", message: "Building code is required" });
+    }
+
+    const docId = buildingMap[building];
+    if (!docId) {
+      return res.status(404).json({ status: "error", message: "Unknown building code" });
+    }
+
+    // Firestore에서 문서 조회
+    const docRef = doc(db, "buildings", docId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      return res.status(404).json({ status: "error", message: "No data for this building" });
+    }
+
+    const { stores } = docSnap.data(); //["공여사&덮다", "홍대쌀국수", ...]
+    // stores 배열만 반환
+    if (stores.length === 0 || !stores) {
+      return res.json({ status: "ok", stores: [] });
+    }
+
+    const chunked = [];
+    for (let i = 0; i < stores.length; i += 10) {
+      chunked.push(stores.slice(i, i + 10));
+    }
+
+    let detailedStores = [];
+
+    for (const group of chunked) {
+      const q = query(collection(db, "stores"), where("name", "in", group));
+      const querySnap = await getDocs(q);
+
+      querySnap.forEach(docSnap=> {
+        console.log(docSnap.data());
+        detailedStores.push(docSnap.data());
+        // detailedStores.push({ id: docSnap.id, ...docSnap.data() });
+      });
+    }
+
+    // 3️⃣ 결과 반환
+    return res.json({ status: "ok", stores: detailedStores });
+
+    /*
+
+    const result = []
+
+    for (const store of stores) {
+      // 각 매장에 대한 추가 정보 처리
+      const storeDocRef = doc(db, "stores", store);
+      const storeDocSnap = await getDoc(storeDocRef);
+      if (storeDocSnap.exists()) {
+        // 매장 정보 병합
+        result.push(storeDocSnap.data());
+      }
+    }
+
+
+    return res.json({ status: "ok", result });
+    */
+
+  } catch (error) {
+    console.error("Error fetching stores:", error);
+    return res.status(500).json({ status: "error", message: "Failed to fetch stores" });
+  }
+})
+
+
+
+
+
+
 
 
 // 최초 판매 상태 전송
