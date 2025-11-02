@@ -275,6 +275,13 @@ app.post('/api/purchase', (req, res) => {
   return res.json({ status: 'ok', message: 'Purchase successful.', remaining: sellQuantity });
 });
 
+
+// 1️⃣ ping 요청 처리 (Python worker keep-alive 용)
+app.get('/ping', (req, res) => {
+  console.log('Ping received');
+  res.sendStatus(200);
+});
+
 // python request로 받은 대기인원수
 app.post('/ping/count', (req, res) => {
   const count = req.body.count;
